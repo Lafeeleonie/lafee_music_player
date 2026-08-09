@@ -1,0 +1,5 @@
+# Personal music library: keep it local and out of the public repository.
+playlist/*
+!playlist/.gitkeep
+bl/*
+!bl/.gitkeep

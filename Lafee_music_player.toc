@@ -1,0 +1,9 @@
+## Interface: 120001
+## Title: Lafee Music Player
+## Notes: Lecteur de musiques en jeu avec playlist et musique speciale BL.
+## Author: Lafee
+## Version: 1.0.0
+## SavedVariables: LafeeMusicPlayerDB
+
+playlist.lua
+Lafee_music_player.lua
