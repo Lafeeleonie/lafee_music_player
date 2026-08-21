@@ -1,4 +1,8 @@
 local ADDON_NAME = ...
+local MINIMAP_BROKER_NAME = "Lafee Music Player"
+local MINIMAP_ICON = "Interface\\Icons\\INV_Misc_Note_01"
+local LDB = LibStub("LibDataBroker-1.1")
+local DBIcon = LibStub("LibDBIcon-1.0")
 
 local LMP = CreateFrame("Frame")
 local DB
@@ -10,6 +14,7 @@ local DEFAULTS = {
     windowShown = true,
     windowPoint = { point = "CENTER", relativePoint = "CENTER", x = 0, y = 120 },
     minimapAngle = 225,
+    minimap = { hide = false, minimapPos = 225 },
 }
 
 local BLOODLUST_SPELLS = {
@@ -41,7 +46,6 @@ local titleText
 local statusText
 local playPauseButton
 local modeButton
-local minimapButton
 
 local function Print(message)
     DEFAULT_CHAT_FRAME:AddMessage("|cffb88cffLafee Music Player|r: " .. message)
@@ -49,6 +53,9 @@ end
 
 local function CopyDefaults()
     LafeeMusicPlayerDB = LafeeMusicPlayerDB or {}
+    local legacyMinimapPos = type(LafeeMusicPlayerDB.minimap) == "table"
+        and tonumber(LafeeMusicPlayerDB.minimap.minimapPos) or nil
+    local legacyMinimapAngle = tonumber(LafeeMusicPlayerDB.minimapAngle)
     for key, value in pairs(DEFAULTS) do
         if LafeeMusicPlayerDB[key] == nil then
             if type(value) == "table" then
@@ -62,6 +69,9 @@ local function CopyDefaults()
         end
     end
     DB = LafeeMusicPlayerDB
+    DB.minimap = type(DB.minimap) == "table" and DB.minimap or {}
+    DB.minimap.hide = DB.minimap.hide == true
+    DB.minimap.minimapPos = legacyMinimapPos or legacyMinimapAngle or 225
 end
 
 local function Tracks()
@@ -78,16 +88,6 @@ end
 
 local function SetMasterVolume(value)
     SetCVar("Sound_MasterVolume", tostring(value))
-end
-
-local function UpdateMinimapButtonPosition()
-    if not minimapButton or not DB then
-        return
-    end
-
-    local angle = math.rad(DB.minimapAngle or 225)
-    minimapButton:ClearAllPoints()
-    minimapButton:SetPoint("CENTER", Minimap, "CENTER", math.cos(angle) * 80, math.sin(angle) * 80)
 end
 
 local function UpdateUI()
@@ -444,52 +444,24 @@ local function CreateMainFrame()
 end
 
 local function CreateMinimapButton()
-    minimapButton = CreateFrame("Button", "LafeeMusicPlayerMinimapButton", Minimap)
-    minimapButton:SetSize(32, 32)
-    minimapButton:SetFrameStrata("MEDIUM")
-    minimapButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-    minimapButton:RegisterForDrag("LeftButton")
-
-    local texture = minimapButton:CreateTexture(nil, "BACKGROUND")
-    texture:SetTexture("Interface\\Icons\\INV_Misc_Note_01")
-    texture:SetAllPoints()
-
-    local fallback = minimapButton:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    fallback:SetPoint("CENTER")
-    fallback:SetText("|cffb88cffL|r")
-
-    minimapButton:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
-    minimapButton:SetScript("OnClick", function(_, button)
-        if button == "RightButton" then
-            TogglePlayPause()
-        else
-            ToggleWindow()
-        end
-    end)
-    minimapButton:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText("Lafee Music Player")
-        GameTooltip:AddLine("Clic gauche: afficher/cacher", 1, 1, 1)
-        GameTooltip:AddLine("Clic droit: play/pause", 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    minimapButton:SetScript("OnLeave", GameTooltip_Hide)
-    minimapButton:SetScript("OnDragStart", function(self)
-        self:SetScript("OnUpdate", function()
-            local mx, my = Minimap:GetCenter()
-            local px, py = GetCursorPosition()
-            local scale = Minimap:GetEffectiveScale()
-            px, py = px / scale, py / scale
-            DB.minimapAngle = math.deg(math.atan2(py - my, px - mx))
-            UpdateMinimapButtonPosition()
-        end)
-    end)
-    minimapButton:SetScript("OnDragStop", function(self)
-        self:SetScript("OnUpdate", nil)
-        UpdateMinimapButtonPosition()
-    end)
-
-    UpdateMinimapButtonPosition()
+    local dataObject = LDB:NewDataObject(MINIMAP_BROKER_NAME, {
+        type = "launcher",
+        text = MINIMAP_BROKER_NAME,
+        icon = MINIMAP_ICON,
+        OnClick = function(_, button)
+            if button == "RightButton" then
+                TogglePlayPause()
+            elseif button == "LeftButton" then
+                ToggleWindow()
+            end
+        end,
+        OnTooltipShow = function(tooltip)
+            tooltip:AddLine(MINIMAP_BROKER_NAME)
+            tooltip:AddLine("Clic gauche: afficher/cacher", 1, 1, 1)
+            tooltip:AddLine("Clic droit: play/pause", 1, 1, 1)
+        end,
+    })
+    DBIcon:Register(MINIMAP_BROKER_NAME, dataObject, DB.minimap)
 end
 
 local function ShowHelp()

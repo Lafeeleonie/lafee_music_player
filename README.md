@@ -47,7 +47,7 @@ powershell -ExecutionPolicy Bypass -File .\update_playlist.ps1
 - `/lmp bl` : tester la musique BL
 - `/lmp show` : afficher ou cacher la fenetre
 
-Le clic gauche sur le bouton minimap affiche/cache la fenetre. Le clic droit fait play/pause.
+Le bouton minimap utilise les bibliotheques LibDataBroker/LibDBIcon embarquees avec l'addon. Le clic gauche affiche/cache la fenetre. Le clic droit fait play/pause.
 
 Note : l'API audio de WoW ne permet pas une vraie pause au milieu d'un fichier. Le bouton pause arrete la piste, puis play la relance depuis le debut.
 
