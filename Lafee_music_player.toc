@@ -8,3 +8,4 @@
 Libraries/Init.xml
 playlist.lua
 Lafee_music_player.lua
+EscapeClose.lua
